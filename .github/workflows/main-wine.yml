@@ -42,7 +42,7 @@ jobs:
       - name: Configure WineGDK (64-bit)
         working-directory: WineGDK/build
         run: |
-          ../configure --enable-win64
+          ../configure
 
       - name: Build WineGDK
         working-directory: WineGDK/build
