@@ -1,0 +1,61 @@
+name: Build WineGDK on Arch
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize Arch keyring
+        run: |
+          pacman-key --init
+          pacman-key --populate archlinux
+
+      - name: Update system and install dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm \
+            base-devel git mingw-w64-gcc gcc \
+            flex bison \
+            libx11 libxext libxrender libxi libxcursor libxrandr libxinerama libxxf86vm \
+            gnutls vulkan-headers vulkan-icd-loader \
+            alsa-lib pulseaudio libusb cups dbus libxcomposite libxdamage libxfixes libxkbfile \
+            libpng libtiff openldap gphoto2 gsm krb5 openal v4l-utils mpg123 libxml2 libxslt gettext vulkan-swrast mesa libglvnd
+
+      - name: Clone WineGDK source
+        run: |
+          git clone --depth=1 https://github.com/Weather-OS/WineGDK
+
+      - name: Prepare build directory
+        run: |
+          mkdir -p WineGDK/build
+
+      - name: Configure WineGDK (64-bit)
+        working-directory: WineGDK/build
+        run: |
+          ../configure --enable-win64
+
+      - name: Build WineGDK
+        working-directory: WineGDK/build
+        run: |
+          make -j$(nproc)
+
+      - name: Package build
+        working-directory: WineGDK/build
+        run: |
+          tar czf ../../wine-build-${{ github.sha }}.tar.gz .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wine-build
+          path: wine-build-${{ github.sha }}.tar.gz
