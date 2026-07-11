@@ -39,10 +39,10 @@ jobs:
         run: |
           mkdir -p WineGDK/build
 
-      - name: Configure WineGDK (64-bit)
+      - name: Configure WineGDK (32-bit)
         working-directory: WineGDK/build
         run: |
-          ../configure
+          ../configure --enable-win32
 
       - name: Build WineGDK
         working-directory: WineGDK/build
